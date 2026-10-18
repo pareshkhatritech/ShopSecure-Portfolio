@@ -34,6 +34,7 @@ CREATE TABLE products (
     discount INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 -- ===========================
 -- Orders
 -- ===========================
@@ -44,10 +45,7 @@ CREATE TABLE orders (
     total DECIMAL(10,2),
     status VARCHAR(50) DEFAULT 'Pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (user_id)
-    REFERENCES users(id)
-    ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- ===========================
@@ -60,13 +58,8 @@ CREATE TABLE order_items (
     product_id INT,
     quantity INT DEFAULT 1,
     price DECIMAL(10,2),
-
-    FOREIGN KEY (order_id)
-    REFERENCES orders(id)
-    ON DELETE CASCADE,
-
-    FOREIGN KEY (product_id)
-    REFERENCES products(id)
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
 -- ===========================
@@ -79,16 +72,16 @@ CREATE TABLE payments (
     amount DECIMAL(10,2),
     payment_method VARCHAR(50),
     payment_status VARCHAR(50) DEFAULT 'Pending',
-
-    FOREIGN KEY (order_id)
-    REFERENCES orders(id)
+    FOREIGN KEY (order_id) REFERENCES orders(id)
 );
 
 -- ===========================
--- Sample Users
--- Demo accounts are intentionally omitted.
--- Create users through the application so passwords are hashed.
+-- Seed policy
 -- ===========================
+-- No demo users or orders are inserted. Create users through the application
+-- so passwords are hashed by the application's registration flow. Create
+-- orders through the application so user ownership and order relationships
+-- are valid. Existing persistent database volumes are not changed by this file.
 
 -- ===========================
 -- Sample Products
@@ -100,23 +93,3 @@ VALUES
 ('Mechanical Keyboard','RGB Keyboard','Accessories',89.99,25),
 ('Wireless Mouse','Gaming Mouse','Accessories',49.99,40),
 ('27 Inch Monitor','IPS Display','Electronics',299.99,15);
-
--- ===========================
--- Sample Orders
--- ===========================
-
-INSERT INTO orders(user_id,total,status)
-VALUES
-(2,1389.98,'Completed'),
-(3,49.99,'Pending');
-
-INSERT INTO order_items(order_id,product_id,quantity,price)
-VALUES
-(1,1,1,1299.99),
-(1,2,1,89.99),
-(2,3,1,49.99);
-
-INSERT INTO payments(order_id,amount,payment_method,payment_status)
-VALUES
-(1,1389.98,'Credit Card','Paid'),
-(2,49.99,'PayPal','Pending');
