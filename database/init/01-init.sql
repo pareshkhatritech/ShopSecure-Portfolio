@@ -44,6 +44,16 @@ CREATE TABLE orders (
     user_id INT NOT NULL,
     total DECIMAL(10,2),
     status VARCHAR(50) DEFAULT 'Pending',
+    shipping_name VARCHAR(100) NOT NULL,
+    shipping_email VARCHAR(150) NULL,
+    shipping_phone VARCHAR(30) NOT NULL,
+    shipping_address TEXT NOT NULL,
+    shipping_city VARCHAR(100) NOT NULL,
+    shipping_postcode VARCHAR(20) NOT NULL,
+    payment_method VARCHAR(50) NOT NULL,
+    payment_last4 CHAR(4) NOT NULL,
+    payment_status VARCHAR(50) NOT NULL DEFAULT 'Pending',
+    payment_reference VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
