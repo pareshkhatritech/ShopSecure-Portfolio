@@ -59,4 +59,4 @@ This is an evolving security lab. Older finding documents may describe issues th
 
 ## License
 
-Add an appropriate license before redistributing publicly.
+This project is made available for portfolio and educational purposes. All rights reserved. No permission is granted to redistribute or use the code without the author's consent.
