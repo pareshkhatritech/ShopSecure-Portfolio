@@ -1,56 +1,29 @@
 # Finding: SQL Injection
 
 ## Severity
-High
+
+High (historical rating; reassess after retesting)
 
 ## Category
+
 OWASP Top 10 - A03 Injection
 
-## Affected Component
+## Affected component
 
-Backend API
+`POST /api/login`
 
-Endpoint:
+## Historical test note
 
-POST /api/login
+The original finding recorded the payload `email=' OR '1'='1` but did not provide evidence that it bypassed authentication or altered the query. Treat that note as a test case, not proof of an exploitable vulnerability.
 
+## Current evidence
 
-## Description
-
-The application accepts user input and queries the database using SQL statements.
-
-Improper handling of input may allow attackers to manipulate SQL queries.
-
-## Testing
-
-Tested endpoint:
-
-POST /api/login
-
-
-Payload:
-
-email=' OR '1'='1
-
-
-## Impact
-
-An attacker may:
-
-- Bypass authentication
-- Access unauthorized data
-- Extract database information
-
+Source review of the current login route shows a parameterized query (`WHERE email = ?`) with the email supplied separately as a query parameter. The consolidated assessment still calls for controlled retesting against the current running version; source review alone is not a complete dynamic test.
 
 ## Recommendation
 
-Use:
-
-- Prepared statements
-- Input validation
-- Parameterized queries
-
+Keep database queries parameterized, validate input, and repeat controlled authentication-bypass tests using disposable lab accounts. Record request, response, and application version before changing the status to fully verified.
 
 ## Status
 
-Needs verification
+**Not confirmed in current evidence; dynamic verification remains required.** This status does not assert that the application is vulnerability-free.

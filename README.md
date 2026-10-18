@@ -28,6 +28,7 @@ The backend and database use internal Docker networking. Do not expose their por
 - Removal of plaintext demo-account inserts from the fresh-install seed
 - Production-only backend dependencies
 - HTTP response-header hardening
+- Source-level security regression checks (`npm test`)
 
 See [the security assessment](docs/security-assessment.md) for test evidence, limitations, and remaining work.
 
@@ -43,7 +44,17 @@ Prerequisites: Docker Engine, Docker Compose, Git, and the required application/
 
 The frontend uses port 5173 in this lab. Restrict access to authorized testing IPs or use it locally. Do not expose backend or database ports to the internet.
 
-The SQL seed does not create plaintext demo accounts. Create test users through the application so passwords follow its hashing flow.
+The SQL seed creates the product catalog but no user accounts or orders. Create test users through the application so passwords follow its hashing flow; create test orders through the application. The former external product-import script has been removed because it could delete the existing catalog.
+
+## Tests
+
+From `web-app/backend`, run:
+
+```sh
+npm test
+```
+
+These are source-level regression checks for selected security invariants. They are not a substitute for running API integration tests against a disposable test database or repeating the documented manual tests.
 
 ## Responsible use
 
@@ -59,4 +70,4 @@ This is an evolving security lab. Older finding documents may describe issues th
 
 ## License
 
-This project is made available for portfolio and educational purposes. All rights reserved. No permission is granted to redistribute or use the code without the author's consent.
+This repository is provided for portfolio and educational viewing. All rights are reserved by the author. No license or permission is granted to use, copy, modify, redistribute, or create derivative works from the code without the author's prior written consent.
