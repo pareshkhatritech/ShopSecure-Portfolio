@@ -1,0 +1,33 @@
+.navbar-brand {
+    letter-spacing: 1px;
+}
+
+.nav-link {
+    margin-right: 15px;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    color: #ffc107 !important;
+}
+
+.navbar .form-control {
+    width: 260px;
+}
+
+.btn-warning {
+    font-weight: 600;
+}
+
+@media (max-width: 991px) {
+
+    .navbar .form-control {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .navbar .btn {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+}

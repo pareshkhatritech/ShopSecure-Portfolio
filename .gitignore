@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+
+# Build
+dist/
+build/
+
+# Testing
+coverage/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.pid
+
+# Local backups and generated reports
+backups/
+reports/
+database/init/*.backup
+
+# Local security-fix backups
+docker-compose.yml.before-*
+web-app/backend/controllers/*.js.before-*
+web-app/frontend/src/**/*.backup
+
+# Local security-fix backups
+web-app/backend/routes/*.js.before-*
+
+# Local source backups
+*.backup
