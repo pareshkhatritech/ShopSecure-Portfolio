@@ -37,9 +37,9 @@ test("checkout validates item counts and demo payment data and protects stock up
 test("fresh-install seed creates sample products but no orphaned users or orders", () => {
     const seed = read("database/init/01-init.sql");
     assert.match(seed, /INSERT INTO products/i);
-    assert.match(seed, /shipping_name VARCHAR\\(100\\) NOT NULL/);
-    assert.match(seed, /payment_last4 CHAR\\(4\\) NOT NULL/);
-    assert.match(seed, /payment_reference VARCHAR\\(100\\) NOT NULL/);
+    assert.ok(seed.includes("shipping_name VARCHAR(100) NOT NULL"));
+    assert.ok(seed.includes("payment_last4 CHAR(4) NOT NULL"));
+    assert.ok(seed.includes("payment_reference VARCHAR(100) NOT NULL"));
     assert.doesNotMatch(seed, /INSERT INTO users/i);
     assert.doesNotMatch(seed, /INSERT INTO orders/i);
     assert.doesNotMatch(seed, /INSERT INTO order_items/i);
