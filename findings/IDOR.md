@@ -1,42 +1,29 @@
-# Finding: IDOR Testing
+# Finding: Cross-Account Order Access (IDOR/Broken Access Control)
 
 ## Severity
 
-Medium
-
+Medium (historical rating)
 
 ## Category
 
 OWASP A01 Broken Access Control
 
+## Affected endpoint
 
-## Description
+`GET /api/orders/:id`
 
-Testing required to verify whether users can access resources belonging to other users.
+## Test evidence
 
+In the recorded lab test, Account A requesting an order owned by Account B received HTTP 404 with an order-not-found response. Account A could retrieve its own orders. Source review also found the order lookup scoped by both order ID and authenticated user ID.
 
-## Test
+## Impact if regressed
 
-Modify object IDs in requests.
-
-
-Example:
-
-GET /api/orders/1
-
-GET /api/orders/2
-
-
-## Impact
-
-Unauthorized data exposure.
-
+A missing ownership check could expose another user's order and associated personal/order data.
 
 ## Recommendation
 
-Validate ownership on every request.
-
+Keep ownership checks in every object-level read/write route and repeat cross-account tests after changes. Use disposable test accounts and orders.
 
 ## Status
 
-Testing Required
+**Not reproduced in the tested state; ownership enforcement was observed in the recorded test and source review. Retest after material changes.** This is not a guarantee for every endpoint.
