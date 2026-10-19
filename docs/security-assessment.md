@@ -22,9 +22,11 @@ Testing was performed against the lab deployment and source code. No production 
 
 Requests to protected order and profile endpoints without a token returned HTTP 403 with a token-required message. Invalid-token requests returned HTTP 401. The public product listing returned HTTP 200 without authentication, as expected for the tested application behavior.
 
-### Cross-account order access
+### Order authorization
 
-Account A requesting an order belonging to Account B received HTTP 404 with an order-not-found message. Account A could retrieve its own order list. Source review confirmed that order queries are scoped to the authenticated user.
+Source-level review and the automated portfolio test confirmed that the individual order lookup query scopes access by both the order ID and the authenticated user's ID. The evidence summarized in the authentication-testing report does not independently verify a runtime cross-account request, so this report does not claim that runtime result as confirmed here.
+
+A controlled cross-account runtime test using disposable lab accounts and orders remains recommended.
 
 ### Administrative authorization
 
