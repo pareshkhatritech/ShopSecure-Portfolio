@@ -2,7 +2,7 @@ const express = require("express");
 require("dotenv").config();
 
 require("./config/database");
-
+const cors = require("cors");
 const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/products");
 const ordersRoutes = require("./routes/orders");
@@ -10,6 +10,9 @@ const profileRoutes = require("./routes/profile");
 const adminRoutes = require("./routes/admin");
 const labRoutes = require("./routes/lab");
 const app = express();
+app.use(cors({
+  origin: "https://shopsecure-portfolio.paresh-khatri-tech.workers.dev"
+}));
 app.disable("x-powered-by");
 
 app.use(express.json());
