@@ -1,7 +1,9 @@
+
 import { useEffect, useMemo, useState } from "react";
-import api from "../api/api";
 import ProductCard from "../components/ProductCard";
 import "../styles/products.css";
+
+const PRODUCTS_API = "https://dummyjson.com/products?limit=0";
 
 export default function Products() {
     const [products, setProducts] = useState([]);
@@ -15,21 +17,52 @@ export default function Products() {
 
         async function loadProducts() {
             try {
+                setLoading(true);
                 setError("");
-                const response = await api.get("/api/products");
-                if (!ignore) setProducts(response.data);
+
+                const response = await fetch(PRODUCTS_API);
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch products");
+                }
+
+                const data = await response.json();
+
+                const mappedProducts = (data.products || []).map(
+                    (product) => ({
+                        ...product,
+                        id: `demo-${product.id}`,
+                        name: product.title,
+                        image: product.thumbnail,
+                        reviews: product.reviews?.length ?? 0,
+                        featured: false,
+                        discount: Math.round(
+                            product.discountPercentage ?? 0
+                        ),
+                        isDemoProduct: true,
+                    })
+                );
+
+                if (!ignore) {
+                    setProducts(mappedProducts);
+                }
             } catch (err) {
                 if (!ignore) {
                     console.error("Products error:", err);
-                    setError("Unable to load products.");
+                    setError("Unable to load products. Please try again.");
                 }
             } finally {
-                if (!ignore) setLoading(false);
+                if (!ignore) {
+                    setLoading(false);
+                }
             }
         }
 
         loadProducts();
-        return () => { ignore = true; };
+
+        return () => {
+            ignore = true;
+        };
     }, []);
 
     const categories = useMemo(() => {
@@ -70,9 +103,7 @@ export default function Products() {
 
     return (
         <main className="products-page">
-
             <div className="container">
-
                 <div className="products-header">
                     <div>
                         <span className="products-label">
@@ -94,7 +125,6 @@ export default function Products() {
                 </div>
 
                 <div className="products-toolbar">
-
                     <div className="product-search">
                         <span>🔎</span>
 
@@ -131,11 +161,9 @@ export default function Products() {
                             </option>
                         ))}
                     </select>
-
                 </div>
 
                 <div className="category-bar">
-
                     {categories.map((item) => (
                         <button
                             key={item}
@@ -147,12 +175,9 @@ export default function Products() {
                             }
                             onClick={() => setCategory(item)}
                         >
-                            {item === "All"
-                                ? "All Products"
-                                : item}
+                            {item === "All" ? "All Products" : item}
                         </button>
                     ))}
-
                 </div>
 
                 {search && (
@@ -171,6 +196,13 @@ export default function Products() {
                 {!loading && error && (
                     <div className="products-message error">
                         {error}
+                        <button
+                            type="button"
+                            className="btn btn-dark"
+                            onClick={() => window.location.reload()}
+                        >
+                            Retry
+                        </button>
                     </div>
                 )}
 
@@ -179,13 +211,10 @@ export default function Products() {
                     filteredProducts.length === 0 && (
                         <div className="products-empty">
                             <div className="empty-icon">🔍</div>
-
                             <h3>No products found</h3>
-
                             <p>
                                 Try another search or category.
                             </p>
-
                             <button
                                 type="button"
                                 className="btn btn-dark"
@@ -200,23 +229,17 @@ export default function Products() {
                     !error &&
                     filteredProducts.length > 0 && (
                         <div className="row products-grid">
-
                             {filteredProducts.map((product) => (
                                 <div
                                     key={product.id}
                                     className="col-xl-3 col-lg-4 col-md-6 mb-4"
                                 >
-                                    <ProductCard
-                                        product={product}
-                                    />
+                                    <ProductCard product={product} />
                                 </div>
                             ))}
-
                         </div>
                     )}
-
             </div>
-
         </main>
     );
 }
