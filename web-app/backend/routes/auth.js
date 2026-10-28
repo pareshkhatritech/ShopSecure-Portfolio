@@ -16,6 +16,7 @@ async function verifyTurnstile(token, remoteip) {
     }
 
     if (!token) {
+        console.error("Turnstile token is missing");
         return false;
     }
 
@@ -36,18 +37,20 @@ async function verifyTurnstile(token, remoteip) {
         );
 
         if (response.data.success !== true) {
-    console.error(
-        "Turnstile rejected token:",
-        response.data["error-codes"]
-    );
-}
-return response.data.success === true;
-} catch (error) {
-    console.error(
-        "Turnstile verification error:",
-        error.response?.data || error.message
-    );
-    return false;
+            console.error(
+                "Turnstile rejected token:",
+                response.data["error-codes"]
+            );
+        }
+
+        return response.data.success === true;
+    } catch (error) {
+        console.error(
+            "Turnstile verification error:",
+            error.response?.data || error.message
+        );
+        return false;
+    }
 }
 
 /*
