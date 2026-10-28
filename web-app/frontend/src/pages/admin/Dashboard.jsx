@@ -6,7 +6,7 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    const API = "/api";
+    const API = `${import.meta.env.VITE_API_URL}/api`;
 
     useEffect(() => {
 
