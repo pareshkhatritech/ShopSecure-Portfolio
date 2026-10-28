@@ -8,13 +8,15 @@ export default function ProductCard({ product }) {
     const { addToCart } = useContext(CartContext);
     const isDemoProduct = product.isDemoProduct === true;
 
-    const discountedPrice =
-        product.discount > 0
-            ? (
-                Number(product.price) -
-                (Number(product.price) * Number(product.discount)) / 100
-            ).toFixed(2)
-            : Number(product.price).toFixed(2);
+    const price = Number(product.price) || 0;
+    const discount = Math.min(
+        100,
+        Math.max(0, Number(product.discount) || 0)
+    );
+
+    const discountedPrice = (
+        price - (price * discount) / 100
+    ).toFixed(2);
 
     const handleAddToCart = () => {
         if (isDemoProduct) return;
@@ -50,9 +52,9 @@ export default function ProductCard({ product }) {
                     justifyContent: "center"
                 }}
             >
-                {product.discount > 0 && (
+                {discount > 0 && (
                     <span className="badge bg-danger position-absolute top-0 start-0 m-2">
-                        {product.discount}% OFF
+                        {discount}% OFF
                     </span>
                 )}
 
@@ -67,7 +69,7 @@ export default function ProductCard({ product }) {
                         product.image ||
                         "https://via.placeholder.com/600x400?text=Product"
                     }
-                    alt={product.name}
+                    alt={product.name || "Product"}
                     className="card-img-top"
                     style={{
                         width: "100%",
@@ -88,35 +90,30 @@ export default function ProductCard({ product }) {
                     {product.brand || product.category || "Product"}
                 </small>
 
-                <h5 className="mt-2">
-                    {product.name}
-                </h5>
+                <h5 className="mt-2">{product.name}</h5>
 
                 <div className="mb-2">
                     <FaStar className="text-warning" />
-
                     <span className="ms-1">
                         {product.rating ?? "N/A"}
                     </span>
-
                     <small className="text-muted ms-2">
                         ({product.reviews ?? 0} reviews)
                     </small>
                 </div>
 
-                {product.discount > 0 ? (
+                {discount > 0 ? (
                     <>
                         <h4 className="text-danger">
                             £{discountedPrice}
                         </h4>
-
                         <del className="text-muted">
-                            £{Number(product.price).toFixed(2)}
+                            £{price.toFixed(2)}
                         </del>
                     </>
                 ) : (
                     <h4 className="text-primary">
-                        £{Number(product.price).toFixed(2)}
+                        £{price.toFixed(2)}
                     </h4>
                 )}
 
@@ -159,9 +156,6 @@ export default function ProductCard({ product }) {
                         <button
                             type="button"
                             className="btn btn-outline-danger"
-                            onClick={() => {
-                                alert("Wishlist functionality is not connected yet.");
-                            }}
                         >
                             <FaHeart className="me-1" />
                             Wishlist
