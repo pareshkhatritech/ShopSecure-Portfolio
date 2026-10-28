@@ -1,3 +1,4 @@
+
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -7,30 +8,31 @@ const db = require("../config/database");
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET;
 
 async function verifyTurnstile(token, remoteip) {
-    if (!TURNSTILE_SECRET) {
-        console.error("TURNSTILE_SECRET is missing");
+    const secret = process.env.TURNSTILE_SECRET;
+
+    if (!secret) {
+        console.error("Turnstile configuration error: TURNSTILE_SECRET is missing");
         return false;
     }
 
     if (!token) {
-        console.error("Turnstile token is missing");
+        console.error("Turnstile verification failed: token is missing");
         return false;
     }
 
     try {
         const response = await axios.post(
             "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-            {
-                secret: TURNSTILE_SECRET,
+            new URLSearchParams({
+                secret,
                 response: token,
-                remoteip
-            },
+                ...(remoteip ? { remoteip } : {})
+            }).toString(),
             {
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/x-www-form-urlencoded"
                 },
                 timeout: 10000
             }
@@ -38,15 +40,16 @@ async function verifyTurnstile(token, remoteip) {
 
         if (response.data.success !== true) {
             console.error(
-                "Turnstile rejected token:",
-                response.data["error-codes"]
+                "Turnstile rejected token. Error codes:",
+                response.data["error-codes"] || ["unknown-error"]
             );
+            return false;
         }
 
-        return response.data.success === true;
+        return true;
     } catch (error) {
         console.error(
-            "Turnstile verification error:",
+            "Turnstile verification request failed:",
             error.response?.data || error.message
         );
         return false;
@@ -58,12 +61,7 @@ REGISTER USER
 POST /api/register
 */
 router.post("/register", async (req, res) => {
-    const {
-        username,
-        email,
-        password,
-        turnstileToken
-    } = req.body;
+    const { username, email, password, turnstileToken } = req.body;
 
     if (!username || !email || !password) {
         return res.status(400).json({
@@ -71,46 +69,50 @@ router.post("/register", async (req, res) => {
         });
     }
 
-    const captchaValid = await verifyTurnstile(
-        turnstileToken,
-        req.ip
-    );
-
-    if (!captchaValid) {
-        return res.status(400).json({
-            message: "Security verification failed. Please try again."
-        });
-    }
-
     try {
+        const captchaValid = await verifyTurnstile(
+            turnstileToken,
+            req.ip
+        );
+
+        if (!captchaValid) {
+            return res.status(400).json({
+                message: "Security verification failed. Please try again."
+            });
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const sql = `
-            INSERT INTO users
-            (username, email, password)
-            VALUES (?, ?, ?)
-        `;
-
         db.query(
-            sql,
-            [username, email, hashedPassword],
+            `INSERT INTO users (username, email, password)
+             VALUES (?, ?, ?)`,
+            [username.trim(), email.trim().toLowerCase(), hashedPassword],
             (err, result) => {
                 if (err) {
+                    if (err.code === "ER_DUP_ENTRY") {
+                        return res.status(409).json({
+                            message: "An account with this email already exists."
+                        });
+                    }
+
+                    console.error("Registration database error:", err.code || err.message);
+
                     return res.status(500).json({
-                        error: err.message
+                        message: "Could not create your account. Please try again."
                     });
                 }
 
-                res.json({
+                return res.status(201).json({
                     message: "User registered successfully",
                     userId: result.insertId
                 });
             }
         );
-
     } catch (error) {
-        res.status(500).json({
-            error: error.message
+        console.error("Registration error:", error.message);
+
+        return res.status(500).json({
+            message: "Registration failed due to a server error."
         });
     }
 });
@@ -120,11 +122,7 @@ LOGIN USER
 POST /api/login
 */
 router.post("/login", async (req, res) => {
-    const {
-        email,
-        password,
-        turnstileToken
-    } = req.body;
+    const { email, password, turnstileToken } = req.body;
 
     if (!email || !password) {
         return res.status(400).json({
@@ -132,72 +130,88 @@ router.post("/login", async (req, res) => {
         });
     }
 
-    const captchaValid = await verifyTurnstile(
-        turnstileToken,
-        req.ip
-    );
-
-    if (!captchaValid) {
-        return res.status(400).json({
-            message: "Security verification failed. Please try again."
-        });
-    }
-
-    const sql = `
-        SELECT * FROM users
-        WHERE email = ?
-    `;
-
-    db.query(sql, [email], async (err, results) => {
-        if (err) {
-            return res.status(500).json({
-                error: err.message
-            });
-        }
-
-        if (results.length === 0) {
-            return res.status(401).json({
-                message: "Invalid credentials"
-            });
-        }
-
-        const user = results[0];
-
-        const validPassword = await bcrypt.compare(
-            password,
-            user.password
+    try {
+        const captchaValid = await verifyTurnstile(
+            turnstileToken,
+            req.ip
         );
 
-        if (!validPassword) {
-            return res.status(401).json({
-                message: "Invalid credentials"
+        if (!captchaValid) {
+            return res.status(400).json({
+                message: "Security verification failed. Please try again."
             });
         }
 
         if (!JWT_SECRET) {
+            console.error("Login configuration error: JWT_SECRET is missing");
+
             return res.status(500).json({
                 message: "Server authentication configuration error"
             });
         }
 
-        const token = jwt.sign(
-            {
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                role: user.role
-            },
-            JWT_SECRET,
-            {
-                expiresIn: "1h"
+        db.query(
+            "SELECT * FROM users WHERE email = ? LIMIT 1",
+            [email.trim().toLowerCase()],
+            async (err, results) => {
+                if (err) {
+                    console.error("Login database error:", err.code || err.message);
+
+                    return res.status(500).json({
+                        message: "Login failed due to a database error."
+                    });
+                }
+
+                if (!results || results.length === 0) {
+                    return res.status(401).json({
+                        message: "Invalid credentials"
+                    });
+                }
+
+                try {
+                    const user = results[0];
+                    const validPassword = await bcrypt.compare(
+                        password,
+                        user.password
+                    );
+
+                    if (!validPassword) {
+                        return res.status(401).json({
+                            message: "Invalid credentials"
+                        });
+                    }
+
+                    const token = jwt.sign(
+                        {
+                            id: user.id,
+                            username: user.username,
+                            email: user.email,
+                            role: user.role
+                        },
+                        JWT_SECRET,
+                        { expiresIn: "1h" }
+                    );
+
+                    return res.json({
+                        message: "Login successful",
+                        token
+                    });
+                } catch (error) {
+                    console.error("Login processing error:", error.message);
+
+                    return res.status(500).json({
+                        message: "Login failed due to a server error."
+                    });
+                }
             }
         );
+    } catch (error) {
+        console.error("Login error:", error.message);
 
-        res.json({
-            message: "Login successful",
-            token
+        return res.status(500).json({
+            message: "Login failed due to a server error."
         });
-    });
+    }
 });
 
 module.exports = router;
