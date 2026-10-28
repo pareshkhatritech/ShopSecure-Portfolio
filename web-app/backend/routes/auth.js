@@ -35,14 +35,19 @@ async function verifyTurnstile(token, remoteip) {
             }
         );
 
-        return response.data.success === true;
-    } catch (error) {
-        console.error(
-            "Turnstile verification error:",
-            error.message
-        );
-        return false;
-    }
+        if (response.data.success !== true) {
+    console.error(
+        "Turnstile rejected token:",
+        response.data["error-codes"]
+    );
+}
+return response.data.success === true;
+} catch (error) {
+    console.error(
+        "Turnstile verification error:",
+        error.response?.data || error.message
+    );
+    return false;
 }
 
 /*
