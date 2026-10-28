@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { useContext } from "react";
 import { FaStar, FaHeart, FaShoppingCart } from "react-icons/fa";
@@ -5,16 +6,20 @@ import { CartContext } from "../context/CartContextValue";
 
 export default function ProductCard({ product }) {
     const { addToCart } = useContext(CartContext);
+    const isDemoProduct = product.isDemoProduct === true;
 
-    const discountedPrice =
-        product.discount > 0
-            ? (
-                Number(product.price) -
-                (Number(product.price) * Number(product.discount)) / 100
-            ).toFixed(2)
-            : Number(product.price).toFixed(2);
+    const price = Number(product.price) || 0;
+    const discount = Math.min(
+        100,
+        Math.max(0, Number(product.discount) || 0)
+    );
+
+    const discountedPrice = (
+        price - (price * discount) / 100
+    ).toFixed(2);
 
     const handleAddToCart = () => {
+        if (isDemoProduct) return;
         addToCart(product);
     };
 
@@ -47,13 +52,13 @@ export default function ProductCard({ product }) {
                     justifyContent: "center"
                 }}
             >
-                {product.discount > 0 && (
+                {discount > 0 && (
                     <span className="badge bg-danger position-absolute top-0 start-0 m-2">
-                        {product.discount}% OFF
+                        {discount}% OFF
                     </span>
                 )}
 
-                {Number(product.featured) === 1 && (
+                {!isDemoProduct && Number(product.featured) === 1 && (
                     <span className="badge bg-warning text-dark position-absolute top-0 end-0 m-2">
                         Featured
                     </span>
@@ -64,7 +69,7 @@ export default function ProductCard({ product }) {
                         product.image ||
                         "https://via.placeholder.com/600x400?text=Product"
                     }
-                    alt={product.name}
+                    alt={product.name || "Product"}
                     className="card-img-top"
                     style={{
                         width: "100%",
@@ -73,6 +78,7 @@ export default function ProductCard({ product }) {
                         padding: "15px"
                     }}
                     onError={(e) => {
+                        e.currentTarget.onerror = null;
                         e.currentTarget.src =
                             "https://via.placeholder.com/600x400?text=Product";
                     }}
@@ -81,58 +87,71 @@ export default function ProductCard({ product }) {
 
             <div className="card-body d-flex flex-column">
                 <small className="text-muted fw-bold">
-                    {product.brand}
+                    {product.brand || product.category || "Product"}
                 </small>
 
-                <h5 className="mt-2">
-                    {product.name}
-                </h5>
+                <h5 className="mt-2">{product.name}</h5>
 
                 <div className="mb-2">
                     <FaStar className="text-warning" />
-
                     <span className="ms-1">
-                        {product.rating}
+                        {product.rating ?? "N/A"}
                     </span>
-
                     <small className="text-muted ms-2">
-                        ({product.reviews} reviews)
+                        ({product.reviews ?? 0} reviews)
                     </small>
                 </div>
 
-                {product.discount > 0 ? (
+                {discount > 0 ? (
                     <>
                         <h4 className="text-danger">
                             £{discountedPrice}
                         </h4>
-
                         <del className="text-muted">
-                            £{Number(product.price).toFixed(2)}
+                            £{price.toFixed(2)}
                         </del>
                     </>
                 ) : (
                     <h4 className="text-primary">
-                        £{Number(product.price).toFixed(2)}
+                        £{price.toFixed(2)}
                     </h4>
+                )}
+
+                {isDemoProduct && (
+                    <small className="text-muted mb-2">
+                        Demo product — not available for checkout.
+                    </small>
                 )}
 
                 <div className="mt-auto">
                     <div className="d-grid gap-2">
-                        <Link
-                            to={`/products/${product.id}`}
-                            className="btn btn-dark"
-                        >
-                            View Details
-                        </Link>
+                        {isDemoProduct ? (
+                            <button
+                                type="button"
+                                className="btn btn-outline-secondary"
+                                disabled
+                            >
+                                Demo Product
+                            </button>
+                        ) : (
+                            <>
+                                <Link
+                                    to={`/products/${product.id}`}
+                                    className="btn btn-dark"
+                                >
+                                    View Details
+                                </Link>
 
-                        <button
-                            type="button"
-                            className="btn btn-warning"
-                            onClick={handleAddToCart}
-                        >
-                            <FaShoppingCart className="me-1" />
-                            Add to Cart
-                        </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-warning"
+                                    onClick={handleAddToCart}
+                                >
+                                    <FaShoppingCart className="me-1" />
+                                    Add to Cart
+                                </button>
+                            </>
+                        )}
 
                         <button
                             type="button"
