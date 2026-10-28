@@ -21,13 +21,21 @@ function Profile() {
             try {
 
                 const response = await fetch(
-                    "/api/profile",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`
-                        }
-                    }
-                );
+    "https://YOUR-RENDER-BACKEND-URL/api/profile",
+    {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    }
+);
+
+const contentType = response.headers.get("content-type") || "";
+
+if (!contentType.includes("application/json")) {
+    throw new Error("The backend did not return JSON. Check the API URL and backend deployment.");
+}
+
+const data = await response.json();
 
                 const data = await response.json();
 
